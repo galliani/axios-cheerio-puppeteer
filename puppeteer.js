@@ -10,34 +10,33 @@ const puppeteer = require('puppeteer');
     const selectorWaiter = '[data-testid="result-header-wrapper"]';
     await page.waitForSelector(selectorWaiter, { timeout: 100000 });
 
-    // const body = await page.evaluate(() => {
-    //   const contentHolder = '[data-testid="divSRPContentProducts"]';
-    //   return document.querySelector(contentHolder).innerHTML;
-    // });
-    // console.log(body);
+    let urls = await page.evaluate(() => {
+      let results = [];
 
-    let firstPageProducts = await page.evaluate(() => {
-      //Extract each episode's basic details
-      const productSelector = '[data-testid="master-product-card"]';
-      let table = document.querySelector(productSelector);
-      let productCards = Array.from(table.children); 
-     
-      // Loop through each episode and get their details 
-      let product_info = productCards.map(productCard => {
-        const titleSelector = '[data-testid="spnSRPProdName"]';
-        let title = productCard.querySelector(titleSelector).textContent;
+      let items = document.querySelectorAll('.css-7fmtuv');
+      items.forEach((item) => {
+        var title, price, salesCount;
+        
+        title       = item.querySelector('.css-18c4yhp').textContent;
+        price       = item.querySelector('.css-rhd610').textContent;
 
-        const priceSelector = '[data-testid="spnSRPProdPrice"]';
-        let price = productCard.querySelector(priceSelector).textContent;
+        console.log(item.querySelector('.css-18c4yhp').textContent);
+        console.log(item.querySelector('.css-rhd610').textContent);
 
-        let salesCount = productCard.querySelector('.css-u49rxo').textContent;
+        var data = { 
+          title,
+          price,
+          salesCount
+        };
 
-        return { title, price, salesCount };
+        results.push(data);
       });
-      return product_info;
-   });
 
-    console.log(firstPageProducts)
+      return results;
+    })
+
+    console.log(urls);
+
     await browser.close();
   } catch (error) {
     console.log(error);
