@@ -3,7 +3,7 @@ const cheerio = require('cheerio');
 
 (async () => {
   try {
-    const response = await axios.get('https://bvopen.abrickis.me/#/standings');
+    const response = await axios.get('https://www.tokopedia.com/search?st=product&q=madu');
     const $ = cheerio.load(response.data);
 
     console.log($('body').html());
