@@ -18,10 +18,14 @@ const puppeteer = require('puppeteer');
         var title, price, salesCount;
         
         title       = item.querySelector('.css-18c4yhp').textContent;
-        price       = item.querySelector('.css-rhd610').textContent;
 
-        console.log(item.querySelector('.css-18c4yhp').textContent);
-        console.log(item.querySelector('.css-rhd610').textContent);
+        let priceSelector = '[data-testid=spnSRPProdPrice]';
+        price       = item.querySelector(priceSelector).textContent;
+        let wrap    = item.querySelector('.css-1itv5e3 span');
+
+        if (wrap) {
+          salesCount = wrap.textContent.trim();
+        }
 
         var data = { 
           title,
