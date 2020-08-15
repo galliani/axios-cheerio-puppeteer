@@ -17,7 +17,7 @@ const argv      = require('minimist')(process.argv.slice(2));
     await page.setUserAgent(userAgent)
     await page.goto(baseURL + 'search?st=product&q=' + keyword);
     await page.waitForSelector(selectorWaiter, { timeout: 100000 });
-    await page.screenshot({path: 'screenshots/' + keyword + '.png'});
+    // await page.screenshot({path: 'screenshots/' + keyword + '.png'});
 
     let firstPageProducts = await page.evaluate(() => {
       let results = [];
@@ -53,12 +53,36 @@ const argv      = require('minimist')(process.argv.slice(2));
       });
 
       return results;
-    })
+    });
 
     console.log(firstPageProducts);
+
+    // firstPageProducts.forEach(async (product) => {
+
+    //   const tabPageWrapper = '[data-testid="tabPDPWrapper"]';
+    //   var newPage = await browser.newPage();
+
+    //   await newPage.goto(product.pageURL);
+    //   await newPage.waitForSelector(tabPageWrapper, { timeout: 100000 });
+
+    //   let productPage = await newPage.evaluate(() => {
+    //     var description, reviews;
+
+    //     let descriptionSelector = '[data-testid=pdpDescriptionContainer]';
+
+    //     description = document.querySelectorAll(descriptionSelector);
+    //     console.log(description);
+
+    //     // Add to the result page
+    //     product.description = description;
+    //   })
+
+    //   console.log(firstPageProducts);
+    // });
 
     await browser.close();
   } catch (error) {
     console.log(error);
   }
 })();
+
