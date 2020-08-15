@@ -1,20 +1,22 @@
+// HOW TO RUN SAMPLE: node puppeteer.js -k madu
+
 const puppeteer = require('puppeteer');
+const argv      = require('minimist')(process.argv.slice(2));
 
 (async () => {
   try {
     const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
 
-    const userAgent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36';
-    let   baseURL   = 'https://www.tokopedia.com/'
+    const userAgent       = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36';
+    const selectorWaiter  = '[data-testid="result-header-wrapper"]';
+    const baseURL         = 'https://www.tokopedia.com/';
 
     await page.setUserAgent(userAgent)
-    await page.goto(baseURL + 'search?st=product&q=madu');
-    
-    const selectorWaiter = '[data-testid="result-header-wrapper"]';
+    await page.goto(baseURL + 'search?st=product&q=' + argv.k);
     await page.waitForSelector(selectorWaiter, { timeout: 100000 });
 
-    let urls = await page.evaluate(() => {
+    let firstPageProducts = await page.evaluate(() => {
       let results = [];
 
       let items = document.querySelectorAll('.css-7fmtuv');
@@ -48,7 +50,7 @@ const puppeteer = require('puppeteer');
       return results;
     })
 
-    console.log(urls);
+    console.log(firstPageProducts);
 
     await browser.close();
   } catch (error) {
