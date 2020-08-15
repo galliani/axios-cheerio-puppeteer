@@ -4,8 +4,12 @@ const puppeteer = require('puppeteer');
   try {
     const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36')
-    await page.goto('https://www.tokopedia.com/search?st=product&q=madu');
+
+    const userAgent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36';
+    let   baseURL   = 'https://www.tokopedia.com/'
+
+    await page.setUserAgent(userAgent)
+    await page.goto(baseURL + 'search?st=product&q=madu');
     
     const selectorWaiter = '[data-testid="result-header-wrapper"]';
     await page.waitForSelector(selectorWaiter, { timeout: 100000 });
@@ -14,22 +18,27 @@ const puppeteer = require('puppeteer');
       let results = [];
 
       let items = document.querySelectorAll('.css-7fmtuv');
+
       items.forEach((item) => {
-        var title, price, salesCount;
-        
+        var title, price, location, salesCount;
+
+        let priceSelector     = '[data-testid=spnSRPProdPrice]';
+        let locationSelector  = '[data-testid=spnSRPProdTabShopLoc]';
+
         title       = item.querySelector('.css-18c4yhp').textContent;
-
-        let priceSelector = '[data-testid=spnSRPProdPrice]';
         price       = item.querySelector(priceSelector).textContent;
-        let wrap    = item.querySelector('.css-1itv5e3 span');
+        location    = item.querySelector(locationSelector).textContent;
 
-        if (wrap) {
-          salesCount = wrap.textContent.trim();
+        let wrap    = item.querySelector('.css-1itv5e3 span');
+        if (wrap) { 
+          salesCount = wrap.textContent.trim()
+                                       .replace(/[()]/g,'');
         }
 
         var data = { 
           title,
           price,
+          location,
           salesCount
         };
 
