@@ -57,28 +57,36 @@ const argv      = require('minimist')(process.argv.slice(2));
 
     console.log(firstPageProducts);
 
-    // firstPageProducts.forEach(async (product) => {
+    // Loop through each of those links, open a new page instance and get the relevant data from them
+    let pagePromise = (product) => new Promise(async(resolve, reject) => {
+        var description, reviews;
+        let dataObj = {};
+        let newPage = await browser.newPage();
+        let descriptionSelector = '[data-testid=pdpDescriptionContainer]';
+        const tabPageWrapper = '[data-testid="tabPDPWrapper"]';
 
-    //   const tabPageWrapper = '[data-testid="tabPDPWrapper"]';
-    //   var newPage = await browser.newPage();
+        await newPage.goto(product.pageURL);
+        await newPage.evaluate(() => {
+          window.scrollBy(0, window.innerHeight);
+        });
+        await newPage.waitForSelector(tabPageWrapper, { timeout: 100000 });
 
-    //   await newPage.goto(product.pageURL);
-    //   await newPage.waitForSelector(tabPageWrapper, { timeout: 100000 });
+        dataObj['description'] = await newPage.$eval(descriptionSelector, text => text.textContent);
 
-    //   let productPage = await newPage.evaluate(() => {
-    //     var description, reviews;
+        resolve(dataObj);
+        await newPage.close();
+    });
 
-    //     let descriptionSelector = '[data-testid=pdpDescriptionContainer]';
+    for(index in firstPageProducts){
+        var product = firstPageProducts[index];
 
-    //     description = document.querySelectorAll(descriptionSelector);
-    //     console.log(description);
+        let currentPageData = await pagePromise(product);
+        // scrapedData.push(currentPageData);
 
-    //     // Add to the result page
-    //     product.description = description;
-    //   })
+        console.log(currentPageData);
+    }
 
-    //   console.log(firstPageProducts);
-    // });
+
 
     await browser.close();
   } catch (error) {
