@@ -24,14 +24,16 @@ const argv      = require('minimist')(process.argv.slice(2));
       let items   = document.querySelectorAll('.css-7fmtuv');
 
       items.forEach((item) => {
-        var title, price, location, salesCount;
+        var title, price, location, salesCount, pageURL;
 
+        let titleSelector     = '.css-18c4yhp';
         let priceSelector     = '[data-testid=spnSRPProdPrice]';
         let locationSelector  = '[data-testid=spnSRPProdTabShopLoc]';
 
-        title       = item.querySelector('.css-18c4yhp').textContent;
-        price       = item.querySelector(priceSelector).textContent;
+        title       = item.querySelector(titleSelector).textContent;
+        price       = item.querySelector(priceSelector).textContent.replace(/[Rp]/g,'');
         location    = item.querySelector(locationSelector).textContent;
+        pageURL     = item.querySelector('a[href]').getAttribute('href');
 
         let wrap    = item.querySelector('.css-1itv5e3 span');
         if (wrap) { 
@@ -43,7 +45,8 @@ const argv      = require('minimist')(process.argv.slice(2));
           title,
           price,
           location,
-          salesCount
+          salesCount,
+          pageURL
         };
 
         results.push(data);
