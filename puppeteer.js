@@ -12,14 +12,16 @@ const argv      = require('minimist')(process.argv.slice(2));
     const selectorWaiter  = '[data-testid="result-header-wrapper"]';
     const baseURL         = 'https://www.tokopedia.com/';
 
+    let keyword = argv.k
+
     await page.setUserAgent(userAgent)
-    await page.goto(baseURL + 'search?st=product&q=' + argv.k);
+    await page.goto(baseURL + 'search?st=product&q=' + keyword);
     await page.waitForSelector(selectorWaiter, { timeout: 100000 });
+    await page.screenshot({path: 'screenshots/' + keyword + '.png'});
 
     let firstPageProducts = await page.evaluate(() => {
       let results = [];
-
-      let items = document.querySelectorAll('.css-7fmtuv');
+      let items   = document.querySelectorAll('.css-7fmtuv');
 
       items.forEach((item) => {
         var title, price, location, salesCount;
