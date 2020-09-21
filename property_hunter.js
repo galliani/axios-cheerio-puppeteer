@@ -27,34 +27,67 @@ const argv      = require('minimist')(process.argv.slice(2));
     await page.goto(baseURL + filter);
     await page.waitForSelector(selectorWaiter, { timeout: 100000 });
 
+    let selectorForLoadMoreButton   = '[data-aut-id=btnLoadMore]';
+    const isElementVisible = async (page, cssSelector) => {
+      let visible = true;
+      await page
+        .waitForSelector(cssSelector, { visible: true, timeout: 2000 })
+        .catch(() => {
+          visible = false;
+        });
+      return visible;
+    };
+
+    let loadMoreVisible = await isElementVisible(page, selectorForLoadMoreButton);
+    while (loadMoreVisible) {
+      await page
+        .click(selectorForLoadMoreButton)
+        .catch(() => {});
+      loadMoreVisible = await isElementVisible(page, selectorForLoadMoreButton);
+    }
+
+
     let firstPageProducts = await page.evaluate(() => {
-      let results = [];
-      let items   = document.querySelectorAll('.EIR5N');
+      let results       = [];
+      let items = document.querySelectorAll('.EIR5N');
 
       let blackListedKeywords = [
         'apartemen',
         'apartement',
         'apartment',
+        'akad',
+        'bekasi',
         'bogor',
+        'bojonggede',
+        'bsd',
+        'cabe',
+        'cash',
         'cibinong',
+        'cibubur',
         'cilebut',
         'cileungsi',
+        'cinere',
         'citayam',
         'cluster',
         'depok',
         'dp',
+        'indent',
         'jagakarsa',
+        'kalisuren',
         'kebagusan',
         'kontrakan',
         'lenteng',
         'motor',
+        'muka',
         'pamulang',
         'parung',
+        'perumahan',
         'syariah',
-        'tangerang'
+        'tangerang',
+        'town'
       ];
 
-      items.forEach((item) => {
+      items.forEach((item, index, items) => {
         var title, titleWords, price, pageURL;
 
         let titleSelector     = '[data-aut-id=itemTitle]';
@@ -87,7 +120,7 @@ const argv      = require('minimist')(process.argv.slice(2));
 
     console.log(firstPageProducts);
 
-    // await browser.close();
+    await browser.close();
   } catch (error) {
     console.log(error);
   }
