@@ -81,7 +81,6 @@ const argv      = require('minimist')(process.argv.slice(2));
         var product = firstPageProducts[index];
 
         let currentPageData = await pagePromise(product);
-        // scrapedData.push(currentPageData);
 
         console.log(currentPageData);
     }
