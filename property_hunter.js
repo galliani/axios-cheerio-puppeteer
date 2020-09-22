@@ -2,6 +2,8 @@
 
 const puppeteer = require('puppeteer');
 const argv      = require('minimist')(process.argv.slice(2));
+const fs        = require('fs');
+
 
 (async () => {
   try {
@@ -137,6 +139,27 @@ const argv      = require('minimist')(process.argv.slice(2));
           }
           return result;
         };
+        const certificateFetcher = async() => {
+          let result;
+          try {
+            result = await newPage.$eval(certificateSelector, text => text.textContent); 
+          }
+          catch(err) {
+            result = null;
+          }
+          return result;
+        };
+        const hoverToDetail = async() => {
+          let success;
+          try {
+            await newPage.hover(waiterSelector);
+            success = true;
+          }
+          catch(err) {
+            success = false;
+          }
+          return success;
+        };
 
         // Scrolling-related selector
         const waiterSelector          = '[data-aut-id=itemParams]';
@@ -152,14 +175,17 @@ const argv      = require('minimist')(process.argv.slice(2));
 
         let newPage = await browser.newPage();
         await newPage.goto(product.url);
-        await newPage.hover(waiterSelector);
+        // await newPage.hover(waiterSelector);
+        let isSuccessful = await hoverToDetail();
 
-        pageData['address']         = await addressFetcher();
-        pageData['bathroom']        = await newPage.$eval(bathRoomCountSelector, text => text.textContent);
-        pageData['bedroom']         = await newPage.$eval(bedRoomCountSelector, text => text.textContent);
-        pageData['certificate']     = await newPage.$eval(certificateSelector, text => text.textContent);
-        pageData['land_size']       = await newPage.$eval(landSizeSelector, text => text.textContent);
-        pageData['building_size']   = await newPage.$eval(buildingSizeSelector, text => text.textContent);
+        if(isSuccessful) {
+            pageData['address']         = await addressFetcher();
+            pageData['bathroom']        = await newPage.$eval(bathRoomCountSelector, text => text.textContent);
+            pageData['bedroom']         = await newPage.$eval(bedRoomCountSelector, text => text.textContent);
+            pageData['certificate']     = await certificateFetcher();
+            pageData['land_size']       = await newPage.$eval(landSizeSelector, text => text.textContent);
+            pageData['building_size']   = await newPage.$eval(buildingSizeSelector, text => text.textContent);
+        }
 
         resolve(pageData);
 
@@ -178,6 +204,13 @@ const argv      = require('minimist')(process.argv.slice(2));
     }
     // END --- Getting the Details //
     console.log(endResults);
+
+    var jsonResults = JSON.stringify(endResults);
+    fs.writeFile('myjsonfile.json', jsonResults, 'utf8', function(err) {
+        if (err) throw err;
+        console.log('FINISHED storing into file');
+    });
+
     return endResults;
 
     await browser.close();
