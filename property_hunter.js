@@ -1,8 +1,23 @@
-// HOW TO RUN SAMPLE: node property_hunter.js -k 400000000 -l 500000000
+// HOW TO RUN SAMPLE: node property_hunter.js -k 400000000 -l 1000000000
 
 const puppeteer = require('puppeteer');
 const argv      = require('minimist')(process.argv.slice(2));
 const fs        = require('fs');
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+const csvWriter = createCsvWriter({
+  path: 'out.csv',
+  header: [
+    {id: 'title', title: 'Judul'},
+    {id: 'price', title: 'Harga'},
+    {id: 'address', title: 'Alamat'},
+    {id: 'land_size', title: 'LT'},
+    {id: 'building_size', title: 'LB'},
+    {id: 'bedroom', title: 'Kamar Tidur'},
+    {id: 'bathroom', title: 'Kamar Mandi'},
+    {id: 'certificate', title: 'Sertifikat'},
+    {id: 'url', title: 'URL'}
+  ]
+});
 
 
 (async () => {
@@ -14,7 +29,7 @@ const fs        = require('fs');
     const selectorWaiter  = '.EIR5N';
 
     const domain    = "https://www.olx.co.id";
-    const baseURL   = "https://www.olx.co.id/jakarta-dki_g2000007/dijual-rumah-apartemen_c5158/q-jakarta-selatan?filter=";
+    const baseURL   = "https://www.olx.co.id/jakarta-selatan_g4000030/dijual-rumah-apartemen_c5158/q-jakarta-selatan?filter=";
     const context   = browser.defaultBrowserContext();
 
     let priceMin = argv.k || '100000000';
@@ -56,72 +71,27 @@ const fs        = require('fs');
       let results   = [];
       let items     = document.querySelectorAll('.EIR5N');
 
-      let blackListedKeywords = [
-        'apartemen',
-        'apartement',
-        'apartment',
-        'akad',
-        'banten',
-        'bekasi',
-        'bogor',
-        'bojonggede',
-        'bsd',
-        'cabe',
-        'cash',
-        'cibinong',
-        'cibubur',
-        'cilebut',
-        'cileungsi',
-        'cinere',
-        'citayam',
-        'cluster',
-        'depok',
-        'dp',
-        'indent',
-        'jagakarsa',
-        'kalisuren',
-        'kebagusan',
-        'kontrakan',
-        'lenteng',
-        'motor',
-        'muka',
-        'pamulang',
-        'parung',
-        'perumahan',
-        'serpong',
-        'syariah',
-        'tangerang',
-        'tangsel',
-        'town'
-      ];
-
       items.forEach((item, index, items) => {
-        var title, titleWords, price, pageURL;
+        var title, price, pageURL;
 
         let titleSelector     = '[data-aut-id=itemTitle]';
         let priceSelector     = '[data-aut-id=itemPrice]';
 
         title       = item.querySelector(titleSelector).textContent;
-        titleWords  = title.split(' ').map(titleStr => titleStr.toLowerCase());
         price       = item.querySelector(priceSelector).textContent;
         pageURL     = item.querySelector('a[href]').getAttribute('href');
 
-        var containBlacklistedKeyword = blackListedKeywords.find( val => titleWords.includes(val.toLowerCase()) )
+        var data = {
+          title,
+          price,
+          pageURL
+        };
 
-        if(containBlacklistedKeyword) {
-          // do nothing
-        } else {
-          var data = {
-            title,
-            price,
-            pageURL
-          };
-
-          results.push(data);
-        }
+        results.push(data);
       });
 
       console.log('DONE collecting all data on index');
+      console.log(results);
       return results;
     });
 
@@ -175,7 +145,6 @@ const fs        = require('fs');
 
         let newPage = await browser.newPage();
         await newPage.goto(product.url);
-        // await newPage.hover(waiterSelector);
         let isSuccessful = await hoverToDetail();
 
         if(isSuccessful) {
@@ -192,24 +161,73 @@ const fs        = require('fs');
         await newPage.close();
     });
     for(index in firstPageProducts){
+        let blackListedKeywords = [
+          'apartemen',
+          'apartement',
+          'apartment',
+          'akad',
+          'banten',
+          'Bali',
+          'bekasi',
+          'bogor',
+          'bojonggede',
+          'bsd',
+          'cabe',
+          'cash',
+          'cibinong',
+          'cibubur',
+          'cilebut',
+          'cileungsi',
+          'cinere',
+          'citayam',
+          'cluster',
+          'depok',
+          'dp',
+          'indent',
+          'jagakarsa',
+          'kalisuren',
+          'kebagusan',
+          'kontrakan',
+          'Kost',
+          'lenteng',
+          'motor',
+          'muka',
+          'pamulang',
+          'parung',
+          'perumahan',
+          'readystock',
+          'serpong',
+          'stock',
+          'stok',
+          'syariah',
+          'tangerang',
+          'tangsel',
+          'town',
+          'Villa'
+        ];      
         var product         = firstPageProducts[index];
         product.url         = domain + product.pageURL;
 
-        console.log(`Viewing ${product.title}`);
-        let currentPageData = await detailPagePromise(product);
+        var titleWords  = product.title.split(' ').map(titleStr => titleStr.toLowerCase());
+        var containBlacklistedKeyword = blackListedKeywords.find( val => titleWords.includes(val.toLowerCase()) )
 
-        const combinedData  = {...product, ...currentPageData }
+        if(containBlacklistedKeyword) {
+          console.log(`Eliminating ${product.title}`)
+        } else {
+          console.log(`Viewing ${product.title}`);
+          let currentPageData = await detailPagePromise(product);
 
-        endResults.push(combinedData);
+          const combinedData  = {...product, ...currentPageData }
+
+          endResults.push(combinedData);
+        }
     }
     // END --- Getting the Details //
     console.log(endResults);
 
-    var jsonResults = JSON.stringify(endResults);
-    fs.writeFile('myjsonfile.json', jsonResults, 'utf8', function(err) {
-        if (err) throw err;
-        console.log('FINISHED storing into file');
-    });
+    csvWriter
+      .writeRecords(endResults)
+      .then(()=> console.log('The CSV file was written successfully'));
 
     return endResults;
 
