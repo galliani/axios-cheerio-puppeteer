@@ -45,25 +45,16 @@ const csvWriter = createCsvWriter({
     await page.waitForSelector(selectorWaiter, { timeout: 100000 });
 
     // LOAD MORE SECTION //
-    let selectorForLoadMoreButton   = '[data-aut-id=btnLoadMore]';
-    const isElementVisible = async (page, cssSelector) => {
-      let visible = true;
-      await page
-        .waitForSelector(cssSelector, { visible: true, timeout: 2000 })
-        .catch(() => {
-          visible = false;
-        });
-      return visible;
-    };
-    console.log('START loading all results');
-    let loadMoreVisible = await isElementVisible(page, selectorForLoadMoreButton);
-    while (loadMoreVisible) {
-      await page
-        .click(selectorForLoadMoreButton)
-        .catch(() => {});
-      loadMoreVisible = await isElementVisible(page, selectorForLoadMoreButton);
-    }
-    console.log('DONE loading all search results');
+    // console.log('START loading all results');
+    // let selectorForLoadMoreButton   = '[data-aut-id=btnLoadMore]';
+    // let loadMoreVisible = await isElementVisible(page, selectorForLoadMoreButton);
+    // while (loadMoreVisible) {
+    //   await page
+    //     .click(selectorForLoadMoreButton)
+    //     .catch(() => {});
+    //   loadMoreVisible = await isElementVisible(page, selectorForLoadMoreButton);
+    // }
+    // console.log('DONE loading all search results');
     // END --- LOAD MORE SECTION //
 
     let firstPageProducts = await page.evaluate(() => {
@@ -225,6 +216,17 @@ function visitDetailPage(product, currentPageData) {
   }
 }
 
+const isElementVisible = async (page, cssSelector) => {
+  let visible = true;
+  await page
+    .waitForSelector(cssSelector, { visible: true, timeout: 2000 })
+    .catch(() => {
+      visible = false;
+    });
+  return visible;
+};
+
+
 let blackListedKeywords = [
   'apartemen',
   'apartement',
@@ -250,6 +252,8 @@ let blackListedKeywords = [
   'cluster',
   'depok',
   'dp',
+  'galaxy',
+  'griya',
   'hill',
   'indent',
   'jagakarsa',
@@ -264,10 +268,12 @@ let blackListedKeywords = [
   'muka',
   'pamulang',
   'parung',
+  'parang',
   'perumahan',
   'pesanggrahan',
   'Petukangan',
   'readystock',
+  'Sawangan',
   'serpong',
   'stock',
   'stok',
