@@ -1,4 +1,4 @@
-// HOW TO RUN SAMPLE: node property_hunter.js -k 400000000 -l 1000000000
+// HOW TO RUN SAMPLE: node property_hunter.js -k 400000000 -l 500000000
 
 const puppeteer = require('puppeteer');
 const argv      = require('minimist')(process.argv.slice(2));
@@ -18,7 +18,6 @@ const csvWriter = createCsvWriter({
     {id: 'url', title: 'URL'}
   ]
 });
-
 
 (async () => {
   try {
@@ -140,6 +139,7 @@ const csvWriter = createCsvWriter({
         const buildingSizeSelector    = '[data-aut-id="value_p_sqr_building"]';
         const certificateSelector     = '[data-aut-id="value_p_certificate"]';
         const landSizeSelector        = '[data-aut-id="value_p_sqr_land"]';
+        const descriptionSelector     = '[data-aut-id="itemDescriptionContent"]';
         let   pageData                = {};
 
 
@@ -154,62 +154,21 @@ const csvWriter = createCsvWriter({
             pageData['certificate']     = await certificateFetcher();
             pageData['land_size']       = await newPage.$eval(landSizeSelector, text => text.textContent);
             pageData['building_size']   = await newPage.$eval(buildingSizeSelector, text => text.textContent);
+            pageData['description']     = await newPage.$eval(descriptionSelector, text => text.textContent);
         }
 
         resolve(pageData);
 
         await newPage.close();
     });
+
+    // Visting page by page
     for(index in firstPageProducts){
-        let blackListedKeywords = [
-          'apartemen',
-          'apartement',
-          'apartment',
-          'akad',
-          'banten',
-          'Bali',
-          'bekasi',
-          'bogor',
-          'bojonggede',
-          'bsd',
-          'cabe',
-          'cash',
-          'cibinong',
-          'cibubur',
-          'cilebut',
-          'cileungsi',
-          'cinere',
-          'citayam',
-          'cluster',
-          'depok',
-          'dp',
-          'indent',
-          'jagakarsa',
-          'kalisuren',
-          'kebagusan',
-          'kontrakan',
-          'Kost',
-          'lenteng',
-          'motor',
-          'muka',
-          'pamulang',
-          'parung',
-          'perumahan',
-          'readystock',
-          'serpong',
-          'stock',
-          'stok',
-          'syariah',
-          'tangerang',
-          'tangsel',
-          'town',
-          'Villa'
-        ];      
         var product         = firstPageProducts[index];
         product.url         = domain + product.pageURL;
 
         var titleWords  = product.title.split(' ').map(titleStr => titleStr.toLowerCase());
-        var containBlacklistedKeyword = blackListedKeywords.find( val => titleWords.includes(val.toLowerCase()) )
+        var containBlacklistedKeyword = blackListedKeywords.find( val => titleWords.includes(val.toLowerCase()) );
 
         if(containBlacklistedKeyword) {
           console.log(`Eliminating ${product.title}`)
@@ -217,9 +176,9 @@ const csvWriter = createCsvWriter({
           console.log(`Viewing ${product.title}`);
           let currentPageData = await detailPagePromise(product);
 
-          const combinedData  = {...product, ...currentPageData }
+          let result = visitDetailPage(product, currentPageData);
 
-          endResults.push(combinedData);
+          if(result) { endResults.push(result) }
         }
     }
     // END --- Getting the Details //
@@ -237,3 +196,85 @@ const csvWriter = createCsvWriter({
   }
 })();
 
+function visitDetailPage(product, currentPageData) {
+  var isAddressBlacklisted, descriptionWords;
+  let address         = currentPageData.address;
+  let description     = currentPageData.description;
+
+  if(address) {
+    var addressWords      = address.split(' ').map(addressStr => addressStr.toLowerCase());
+    isAddressBlacklisted  = blackListedKeywords.find( val => addressWords.includes(val.toLowerCase()) );
+  } else {
+    console.log('Address not found');
+
+    if(description) {
+      descriptionWords  = description.split(' ').map(titleStr => titleStr.toLowerCase());
+      isAddressBlacklisted  = blackListedKeywords.find( val => descriptionWords.includes(val.toLowerCase()) );
+    } else {
+      isAddressBlacklisted  = false;
+    }
+  }
+
+  if(isAddressBlacklisted) {
+    console.log("Blacklisted address");
+    return null;
+  } else {
+    const combinedData  = {...product, ...currentPageData }
+
+    return combinedData;
+  }
+}
+
+let blackListedKeywords = [
+  'apartemen',
+  'apartement',
+  'apartment',
+  'akad',
+  'aren',
+  'banten',
+  'bandung',
+  'Bali',
+  'bekasi',
+  'bogor',
+  'bojonggede',
+  'boulevard',
+  'bsd',
+  'cabe',
+  'cash',
+  'cibinong',
+  'cibubur',
+  'cilebut',
+  'cileungsi',
+  'cinere',
+  'citayam',
+  'cluster',
+  'depok',
+  'dp',
+  'hill',
+  'indent',
+  'jagakarsa',
+  'Joglo',
+  'Kreo',
+  'kalisuren',
+  'kebagusan',
+  'kontrakan',
+  'Kost',
+  'lenteng',
+  'motor',
+  'muka',
+  'pamulang',
+  'parung',
+  'perumahan',
+  'pesanggrahan',
+  'Petukangan',
+  'readystock',
+  'serpong',
+  'stock',
+  'stok',
+  'syariah',
+  'tangerang',
+  'tanjung',
+  'tangsel',
+  'town',
+  'Villa'
+];
