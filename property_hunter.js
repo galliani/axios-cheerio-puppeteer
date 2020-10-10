@@ -1,4 +1,4 @@
-// HOW TO RUN SAMPLE: node property_hunter.js -k 400000000 -l 500000000
+// HOW TO RUN SAMPLE: node property_hunter.js -k 300000000 -l 1000000000
 
 const puppeteer = require('puppeteer');
 const argv      = require('minimist')(process.argv.slice(2));
@@ -158,7 +158,7 @@ const csvWriter = createCsvWriter({
         var product         = firstPageProducts[index];
         product.url         = domain + product.pageURL;
 
-        var titleWords  = product.title.split(' ').map(titleStr => titleStr.toLowerCase());
+        var titleWords  = product.title.replace(/,/g, '').split(' ').map(titleStr => titleStr.toLowerCase());
         var containBlacklistedKeyword = blackListedKeywords.find( val => titleWords.includes(val.toLowerCase()) );
 
         if(containBlacklistedKeyword) {
@@ -193,13 +193,13 @@ function visitDetailPage(product, currentPageData) {
   let description     = currentPageData.description;
 
   if(address) {
-    var addressWords      = address.split(' ').map(addressStr => addressStr.toLowerCase());
+    var addressWords      = address.replace(/,/g, '').split(' ').map(addressStr => addressStr.toLowerCase());
     isAddressBlacklisted  = blackListedKeywords.find( val => addressWords.includes(val.toLowerCase()) );
   } else {
     console.log('Address not found');
 
     if(description) {
-      descriptionWords  = description.split(' ').map(titleStr => titleStr.toLowerCase());
+      descriptionWords  = description.replace(/,/g, '').split(' ').map(titleStr => titleStr.toLowerCase());
       isAddressBlacklisted  = blackListedKeywords.find( val => descriptionWords.includes(val.toLowerCase()) );
     } else {
       isAddressBlacklisted  = false;
@@ -247,13 +247,17 @@ let blackListedKeywords = [
   'cibubur',
   'cilebut',
   'cileungsi',
+  'ciputat',
   'cinere',
+  'ciseeng',
   'citayam',
   'cluster',
   'depok',
+  'disewakan',
   'dp',
   'galaxy',
   'griya',
+  'gunung',
   'hill',
   'indent',
   'jagakarsa',
@@ -273,8 +277,11 @@ let blackListedKeywords = [
   'pesanggrahan',
   'Petukangan',
   'readystock',
+  'rent',
+  'residence',
   'Sawangan',
   'serpong',
+  'sewa',
   'stock',
   'stok',
   'syariah',
